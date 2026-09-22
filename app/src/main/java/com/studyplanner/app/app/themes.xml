@@ -1,0 +1,117 @@
+package com.studyplanner.app
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import java.util.concurrent.TimeUnit
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+
+@Composable
+fun TimerScreen(
+    lesson: Lesson,
+    viewModel: StudyViewModel,
+    onClose: () -> Unit
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var elapsedSeconds by remember { mutableStateOf(0L) }
+    var isRunning by remember { mutableStateOf(false) }
+    var startTime by remember { mutableStateOf(0L) }
+    var isPaused by remember { mutableStateOf(false) }
+
+    // تایمر
+    LaunchedEffect(isRunning) {
+        while (isRunning) {
+            delay(1000)
+            elapsedSeconds++
+        }
+    }
+
+    val hours = elapsedSeconds / 3600
+    val minutes = (elapsedSeconds % 3600) / 60
+    val seconds = elapsedSeconds % 60
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("تایمر: ${lesson.name}", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.Default.Close, contentDescription = "بستن")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF4CAF50),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // نمایش زمان
+            Text(
+                text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
+                fontSize = 56.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4CAF50)
+            )
+
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "برنامه: ${lesson.plannedMinutes} دقیقه",
+                fontSize = 16.sp,
+                color = Color.Gray
+            )
+
+            Spacer(Modifier.height(40.dp))
+
+            // دکمه‌ها
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // دکمه شروع/توقف
+                Button(
+                    onClick = {
+                        if (!isRunning) {
+                            isRunning = true
+                            startTime = System.currentTimeMillis()
+                        } else {
+                            isRunning = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isRunning) Color(0xFFF44336) else Color(0xFF4CAF50)
+                    ),
+                    modifier = Modifier.size(80.dp),
+                    shape = RoundedCornerShape(40.dp)
+                ) {
+                    Icon(
+                        if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
